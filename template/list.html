@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/ionicons/css/w3.css">
+    <link rel="stylesheet" href="/css/ionicons/css/ionicons.min.css">
+    <title>Golang Basic App</title>
+    <style>
+        .hoverbtn:hover {
+            font-weight: bold;
+            opacity: 0.4;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        #searchInput {
+            background-image: url('/css/searchicon.png'); /* Add a search icon to input */
+            background-position: 10px 12px; /* Position the search icon */
+            background-repeat: no-repeat; /* Do not repeat the icon image */
+            width: 100%; /* Full-width */
+            font-size: 16px; /* Increase font-size */
+            padding: 12px 20px 12px 40px; /* Add some padding */
+            border: 1px solid #ddd; /* Add a grey border */
+            margin-bottom: 12px; /* Add some space below the input */
+        }
+    </style>
+</head>
+<body>
+<div class="w3-row-padding">
+    <div class="w3-card-2 w3-margin-top">
+        <header class="w3-container w3-center w3-teal">
+            <div class="w3-row">
+                <div class="w3-half">
+                    <h3 class="w3-right">Listing Details</h3>
+                </div>
+                <div class="w3-half w3-text-right">
+                    <div class="w3-right">
+                        <a href="#" onclick="document.getElementById('create-form').style.display='block'">
+                            <i class="icon ion-ios-plus-outline w3-xxlarge hoverbtn"></i>
+                        </a>
+                        <a href="/logout">
+                            <i class="icon ion-log-out w3-xxlarge hoverbtn"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <input type="text" id="searchInput" onkeyup="searchFunction()" placeholder="Search for email..">
+
+        <table class="w3-table w3-centered w3-border w3-bordered w3-hoverable" id= "userTable">
+            <thead>
+            <tr>
+                <th onclick="sortTable(0)">Ord</th>
+                <th onclick="sortTable(1)">Id</th>
+                <th onclick="sortTable(2)">Email</th>
+                <th onclick="sortTable(3)">Address</th>
+                <th onclick="sortTable(4)">City</th>
+                <th onclick="sortTable(5)">State</th>
+                <th onclick="sortTable(6)">Shop Name</th>
+                <th onclick="sortTable(7)">Category</th>
+                <th onclick="sortTable(8)">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{range $index, $cost := .}}
+            <tr>
+                <td>#{{addOne $index}}</td>
+                <td>{{$cost.ID}}</td>
+                <td>{{$cost.Email}}</td>
+                <td>{{$cost.Address}}</td>
+                <td>{{$cost.City}}</td>
+                <td>{{$cost.State}}</td>
+                <td>{{$cost.ShopName}}</td>
+                <td>{{$cost.Category}}</td>
+                <td>
+                    <button class="w3-btn w3-teal" onclick="updateCost(this);">Modify</button>
+                    <button class="w3-btn w3-red" onclick="deleteCost(this)">Delete</button>
+                </td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Create Modals -->
+<div class="w3-container">
+    <div id="create-form" class="w3-modal">
+        <div class="w3-modal-content w3-card-8 w3-animate-zoom" style="max-width: 600px;">
+            <!-- head -->
+            <div class="w3-container w3-teal">
+                <h2>Create new Retailer</h2>
+                <span class="w3-closebtn w3-hover-red w3-container w3-padding-8 w3-display-topright"
+                      onclick="document.getElementById('create-form').style.display='none'">&times;</span>
+            </div>
+
+            <form class="w3-container" action="/create" method="post">
+                <label class="w3-label">Email</label>
+                <input class="w3-input" type="text" name="Email" placeholder="abc@abc.com">
+                <label class="w3-label">Address</label>
+                <input class="w3-input" type="text" name="Address" placeholder="Address">
+                <label class="w3-label">City</label>
+                <input class="w3-input" type="text" name="City" placeholder="City">
+                <label class="w3-label">State</label>
+                <input class="w3-input" type="text" name="State" placeholder="State">
+                <label class="w3-label">Shop Name</label>
+                <input class="w3-input" type="text" name="ShopName" placeholder="Shop Name">
+                <label class="w3-label">Category</label>
+                <input class="w3-input" type="text" name="Category" placeholder="Category">
+                <button class="w3-btn w3-teal w3-margin-top w3-margin-bottom w3-right" type="submit">Create</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Edit Modals -->
+<div class="w3-container">
+    <div id="edit-form" class="w3-modal">
+        <div class="w3-modal-content w3-card-8 w3-animate-zoom" style="max-width: 600px;">
+            <!-- head -->
+            <div class="w3-container w3-teal">
+                <h3>Edit Data (Please add data in all fields while updating)</h3>
+                <span class="w3-closebtn w3-hover-red w3-container w3-padding-8 w3-display-topright"
+                      onclick="document.getElementById('edit-form').style.display='none'">&times;</span>
+            </div>
+
+            <form class="w3-container" action="/update" method="post">
+                <input type="hidden" name="Id" id="costIdToUpdate">
+                <label class="w3-label">Email</label>
+                <input class="w3-input" type="text" name="Email" placeholder="Updated Email">
+                <label class="w3-label">Address</label>
+                <input class="w3-input" type="text" name="Address" placeholder="Updated Address">
+                <label class="w3-label">City</label>
+                <input class="w3-input" type="text" name="City" placeholder=" Updated City">
+                <label class="w3-label">State</label>
+                <input class="w3-input" type="text" name="State" placeholder="Updated State">
+                <label class="w3-label">Shop Name</label>
+                <input class="w3-input" type="text" name="ShopName" placeholder="Updated Shop Name">
+                <label class="w3-label">Category</label>
+                <input class="w3-input" type="text" name="Category" placeholder="Updated Category">
+                <button class="w3-btn w3-teal w3-margin-top w3-margin-bottom w3-right" type="submit">Save</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Delete Modals -->
+<div class="w3-container">
+    <div id="delete-form" class="w3-modal">
+        <div class="w3-modal-content w3-card-8 w3-animate-zoom" style="max-width: 600px;">
+            <!-- head -->
+            <div class="w3-container w3-teal">
+                <h2>Are you sure?</h2>
+                <span class="w3-closebtn w3-hover-red w3-container w3-padding-8 w3-display-topright"
+                      onclick="document.getElementById('delete-form').style.display='none'">&times;</span>
+            </div>
+
+            <form class="w3-container" action="/delete" method="post">
+                <input type="hidden" name="Id" id="costIdToDelete">
+                <div class="w3-center">
+                    <button class="w3-btn w3-red w3-margin-top w3-margin-bottom" type="submit">Delete</button>
+                    <button type="button" class="w3-btn w3-teal w3-margin-top w3-margin-bottom"
+                            onclick="document.getElementById('delete-form').style.display='none'">Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+  function updateCost(e) {
+    var editForm = document.getElementById('edit-form');
+    // display update form
+    editForm.style.display = 'block';
+    // get cost id to update
+    var costId = e.parentNode.parentNode.childNodes[3].innerText;
+    document.getElementById('costIdToUpdate').value = costId;
+  }
+
+  function deleteCost(e) {
+    var deleteForm = document.getElementById('delete-form');
+    deleteForm.style.display = 'block';
+    var costId = e.parentNode.parentNode.childNodes[3].innerText;
+    document.getElementById('costIdToDelete').value = costId;
+  }
+
+  function sortTable(n) {
+  var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+  table = document.getElementById("userTable");
+  switching = true;
+  // Set the sorting direction to ascending:
+  dir = "asc";
+  /* Make a loop that will continue until
+  no switching has been done: */
+  while (switching) {
+    // Start by saying: no switching is done:
+    switching = false;
+    rows = table.rows;
+    /* Loop through all table rows (except the
+    first, which contains table headers): */
+    for (i = 1; i < (rows.length - 1); i++) {
+      // Start by saying there should be no switching:
+      shouldSwitch = false;
+      /* Get the two elements you want to compare,
+      one from current row and one from the next: */
+      x = rows[i].getElementsByTagName("TD")[n];
+      y = rows[i + 1].getElementsByTagName("TD")[n];
+      /* Check if the two rows should switch place,
+      based on the direction, asc or desc: */
+      if (dir == "asc") {
+        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+          // If so, mark as a switch and break the loop:
+          shouldSwitch = true;
+          break;
+        }
+      } else if (dir == "desc") {
+        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+          // If so, mark as a switch and break the loop:
+          shouldSwitch = true;
+          break;
+        }
+      }
+    }
+    if (shouldSwitch) {
+      /* If a switch has been marked, make the switch
+      and mark that a switch has been done: */
+      rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+      switching = true;
+      // Each time a switch is done, increase this count by 1:
+      switchcount ++;
+    } else {
+      /* If no switching has been done AND the direction is "asc",
+      set the direction to "desc" and run the while loop again. */
+      if (switchcount == 0 && dir == "asc") {
+        dir = "desc";
+        switching = true;
+      }
+    }
+  }
+}
+
+function searchFunction() {
+  // Declare variables
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("searchInput");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("userTable");
+  tr = table.getElementsByTagName("tr");
+
+  // Loop through all table rows, and hide those who don't match the search query
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[2];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+  }
+}
+</script>
+</body>
+</html>

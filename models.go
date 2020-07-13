@@ -1,16 +1,19 @@
 package main
 
+//Cost ..
 type Cost struct {
-	Id             int64   `json:"id"`
-	ElectricAmount int64   `json:"electric_amount"`
-	ElectricPrice  float64 `json:"electric_price"`
-	WaterAmount    int64   `json:"water_amount"`
-	WaterPrice     float64 `json:"water_price"`
-	CheckedDate    string  `json:"checked_date"`
+	ID       int64  `json:"id"`
+	Email    string `json:"email"`
+	Address  string `json:"address"`
+	City     string `json:"city"`
+	State    string `json:"state"`
+	ShopName string `json:"shop_name"`
+	Category string `json:"category"`
 }
 
+//User ..
 type User struct {
-	Id       int64  `json:"id"`
+	ID       int64  `json:"id"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Role     int64  `json:"role"`

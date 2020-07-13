@@ -6,12 +6,13 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		http.ServeFile(w, r, "tmpl/register.html")
+		http.ServeFile(w, r, "template/register.html")
 		return
 	}
 	// grab user info
@@ -40,9 +41,28 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func forgotHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.ServeFile(w, r, "template/forgot.html")
+		return
+	}
+	// grab user info
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	checkInternalServerError(err, w)
+	stmt, err := db.Prepare(`UPDATE users SET password=? WHERE username=?`)
+	checkInternalServerError(err, w)
+	res, err := stmt.Exec(hashedPassword, username)
+	checkInternalServerError(err, w)
+	_, err = res.RowsAffected()
+	checkInternalServerError(err, w)
+	http.Redirect(w, r, "/", 301)
+}
+
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		http.ServeFile(w, r, "tmpl/login.html")
+		http.ServeFile(w, r, "template/login.html")
 		return
 	}
 	// grab user info from the submitted form
@@ -86,12 +106,12 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 	var costs []Cost
 	var cost Cost
 	for rows.Next() {
-		err = rows.Scan(&cost.Id, &cost.ElectricAmount,
-			&cost.ElectricPrice, &cost.WaterAmount, &cost.WaterPrice, &cost.CheckedDate)
+		err = rows.Scan(&cost.ID, &cost.Email,
+			&cost.Address, &cost.City, &cost.State, &cost.ShopName, &cost.Category)
 		checkInternalServerError(err, w)
 		costs = append(costs, cost)
 	}
-	t, err := template.New("list.html").Funcs(funcMap).ParseFiles("tmpl/list.html")
+	t, err := template.New("list.html").Funcs(funcMap).ParseFiles("template/list.html")
 	checkInternalServerError(err, w)
 	err = t.Execute(w, costs)
 	checkInternalServerError(err, w)
@@ -104,24 +124,25 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", 301)
 	}
 	var cost Cost
-	cost.ElectricAmount, _ = strconv.ParseInt(r.FormValue("ElectricAmount"), 10, 64)
-	cost.ElectricPrice, _ = strconv.ParseFloat(r.FormValue("ElectricPrice"), 64)
-	cost.WaterAmount, _ = strconv.ParseInt(r.FormValue("WaterAmount"), 10, 64)
-	cost.WaterPrice, _ = strconv.ParseFloat(r.FormValue("WaterPrice"), 64)
-	cost.CheckedDate = r.FormValue("CheckedDate")
-	fmt.Println(cost)
+	cost.Email = r.FormValue("Email")
+	cost.Address = r.FormValue("Address")
+	cost.City = r.FormValue("City")
+	cost.State = r.FormValue("State")
+	cost.ShopName = r.FormValue("ShopName")
+	cost.Category = r.FormValue("Category")
+	// fmt.Println(cost)
 
 	// Save to database
 	stmt, err := db.Prepare(`
-		INSERT INTO cost(electric_amount, electric_price, water_amount, water_price, checked_date)
-		VALUES(?, ?, ?, ?, ?)
+		INSERT INTO cost(email, address, city, state, shop_name, category)
+		VALUES(?, ?, ?, ?, ?, ?)
 	`)
 	if err != nil {
 		fmt.Println("Prepare query error")
 		panic(err)
 	}
-	_, err = stmt.Exec(cost.ElectricAmount, cost.ElectricPrice,
-		cost.WaterAmount, cost.WaterPrice, cost.CheckedDate)
+	_, err = stmt.Exec(cost.Email, cost.Address,
+		cost.City, cost.State, cost.ShopName, cost.Category)
 	if err != nil {
 		fmt.Println("Execute query error")
 		panic(err)
@@ -135,20 +156,20 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", 301)
 	}
 	var cost Cost
-	cost.Id, _ = strconv.ParseInt(r.FormValue("Id"), 10, 64)
-	cost.ElectricAmount, _ = strconv.ParseInt(r.FormValue("ElectricAmount"), 10, 64)
-	cost.ElectricPrice, _ = strconv.ParseFloat(r.FormValue("ElectricPrice"), 64)
-	cost.WaterAmount, _ = strconv.ParseInt(r.FormValue("WaterAmount"), 10, 64)
-	cost.WaterPrice, _ = strconv.ParseFloat(r.FormValue("WaterPrice"), 64)
-	cost.CheckedDate = r.FormValue("CheckedDate")
+	cost.ID, _ = strconv.ParseInt(r.FormValue("Id"), 10, 64)
+	cost.Email = r.FormValue("Email")
+	cost.Address = r.FormValue("Address")
+	cost.City = r.FormValue("City")
+	cost.State = r.FormValue("State")
+	cost.ShopName = r.FormValue("ShopName")
+	cost.Category = r.FormValue("Category")
 	fmt.Println(cost)
 	stmt, err := db.Prepare(`
-		UPDATE cost SET electric_amount=?, electric_price=?, water_amount=?, water_price=?, checked_date=?
+		UPDATE cost SET email=?, address=?, city=?, state=?, shop_name=?, category=?
 		WHERE id=?
 	`)
 	checkInternalServerError(err, w)
-	res, err := stmt.Exec(cost.ElectricAmount, cost.ElectricPrice,
-		cost.WaterAmount, cost.WaterPrice, cost.CheckedDate, cost.Id)
+	res, err := stmt.Exec(cost.Email, cost.Address, cost.City, cost.State, cost.ShopName, cost.Category, cost.ID)
 	checkInternalServerError(err, w)
 	_, err = res.RowsAffected()
 	checkInternalServerError(err, w)
@@ -160,10 +181,10 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Redirect(w, r, "/", 301)
 	}
-	var costId, _ = strconv.ParseInt(r.FormValue("Id"), 10, 64)
+	var costID, _ = strconv.ParseInt(r.FormValue("Id"), 10, 64)
 	stmt, err := db.Prepare("DELETE FROM cost WHERE id=?")
 	checkInternalServerError(err, w)
-	res, err := stmt.Exec(costId)
+	res, err := stmt.Exec(costID)
 	checkInternalServerError(err, w)
 	_, err = res.RowsAffected()
 	checkInternalServerError(err, w)

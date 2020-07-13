@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	db  *sql.DB
-	err error
+	db            *sql.DB
+	err           error
 	authenticated = false
 )
 
@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	//os.Setenv("PORT", "8898")
+	os.Setenv("PORT", "2300")
 	port := os.Getenv("PORT")
 	if port == "" {
 		log.Fatal("$PORT must be set")
@@ -36,12 +36,13 @@ func main() {
 	http.HandleFunc("/login", loginHandler)
 	http.HandleFunc("/logout", logoutHandler)
 	http.HandleFunc("/register", registerHandler)
+	http.HandleFunc("/forgot", forgotHandler)
 	http.HandleFunc("/list", listHandler)
 	http.HandleFunc("/create", createHandler)
 	http.HandleFunc("/update", updateHandler)
 	http.HandleFunc("/delete", deleteHandler)
-	http.Handle("/statics/",
-		http.StripPrefix("/statics/", http.FileServer(http.Dir("./statics"))),
+	http.Handle("/css/",
+		http.StripPrefix("/css/", http.FileServer(http.Dir("./css"))),
 	)
 	http.ListenAndServe(":"+port, nil)
 }
