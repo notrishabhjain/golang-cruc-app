@@ -34,11 +34,11 @@
         <header class="w3-container w3-center w3-teal">
             <div class="w3-row">
                 <div class="w3-half">
-                    <h3 class="w3-right">Customer Details</h3>
+                    <h3 class="w3-right">Listing Retailer Details</h3>
                 </div>
                 <div class="w3-half w3-text-right">
                     <div class="w3-right">
-                        <a href="#" onclick="createCustomer()">
+                        <a href="#" onclick="document.getElementById('create-form').style.display='block'">
                             <i class="icon ion-ios-plus-outline w3-xxlarge hoverbtn"></i>
                         </a>
                         <a href="/logout">
@@ -53,32 +53,31 @@
         <table class="w3-table w3-centered w3-border w3-bordered w3-hoverable" id= "userTable">
             <thead>
             <tr>
-                <th onclick="sortTable(0)">No</th>
+                <th onclick="sortTable(0)">Ord</th>
                 <th onclick="sortTable(1)">Id</th>
-                <th onclick="sortTable(2)">Name</th>
-                <th onclick="sortTable(3)">Email</th>
-                <th onclick="sortTable(4)">Amount</th>
-                <th onclick="sortTable(5)">Contact Number</th>
-                <th onclick="sortTable(6)">Credit Date</th>
+                <th onclick="sortTable(2)">Email</th>
+                <th onclick="sortTable(3)">Address</th>
+                <th onclick="sortTable(4)">City</th>
+                <th onclick="sortTable(5)">State</th>
+                <th onclick="sortTable(6)">Shop Name</th>
+                <th onclick="sortTable(7)">Category</th>
                 <th>Actions</th>
-
             </tr>
             </thead>
             <tbody>
-            {{range $index, $Customer := .}}
+            {{range $index, $cost := .}}
             <tr>
                 <td>#{{addOne $index}}</td>
-                <td>{{$Customer.CusID}}</td>
-                <td>{{$Customer.Name}}</td>
-                <td>{{$Customer.Email}}</td>
-                <td>{{$Customer.Amount}}</td>
-                <td>{{$Customer.Number}}</td>
-                <td>{{$Customer.CreditDate}}</td>
-                <!--<td>{{$Customer.CreditDate}}</td>-->
+                <td>{{$cost.ID}}</td>
+                <td>{{$cost.Email}}</td>
+                <td>{{$cost.Address}}</td>
+                <td>{{$cost.City}}</td>
+                <td>{{$cost.State}}</td>
+                <td>{{$cost.ShopName}}</td>
+                <td>{{$cost.Category}}</td>
                 <td>
-                    <button class="w3-btn w3-teal" onclick="updateCustomer(this);">Modify</button>
-                    <button class="w3-btn w3-red" onclick="deleteCustomer(this)">Delete</button>
-                    <button class="w3-btn w3-teal" onclick="generatePdf(this);">Generate PDF</button>
+                    <button class="w3-btn w3-teal" onclick="updateCost(this);">Modify</button>
+                    <button class="w3-btn w3-red" onclick="deleteCost(this)">Delete</button>
                 </td>
             </tr>
             {{end}}
@@ -93,23 +92,24 @@
         <div class="w3-modal-content w3-card-8 w3-animate-zoom" style="max-width: 600px;">
             <!-- head -->
             <div class="w3-container w3-teal">
-                <h2>Create new Customer</h2>
+                <h2>Create new Retailer</h2>
                 <span class="w3-closebtn w3-hover-red w3-container w3-padding-8 w3-display-topright"
                       onclick="document.getElementById('create-form').style.display='none'">&times;</span>
             </div>
 
-            <form class="w3-container" action="/createCustomer" method="post">
-                <input type="hidden" name="Id" id="retailerId">
-                <label class="w3-label">Name</label>
-                <input class="w3-input" type="text" name="Name" placeholder="Full Name of Customer">
+            <form class="w3-container" action="/createRetailer" method="post">
                 <label class="w3-label">Email</label>
                 <input class="w3-input" type="text" name="Email" placeholder="abc@abc.com">
-                <label class="w3-label">Credit Amount</label>
-                <input class="w3-input" type="number" name="Amount" placeholder="Enter Credit Amount">
-                <label class="w3-label">Number</label>
-                <input class="w3-input" type="text" name="Number" placeholder="Enter Contact Number">
-                <label class="w3-label">Credit Date</label>
-                <input class="w3-input" type="date" name="CreditDate" placeholder="Enter Credit Date">
+                <label class="w3-label">Address</label>
+                <input class="w3-input" type="text" name="Address" placeholder="Address">
+                <label class="w3-label">City</label>
+                <input class="w3-input" type="text" name="City" placeholder="City">
+                <label class="w3-label">State</label>
+                <input class="w3-input" type="text" name="State" placeholder="State">
+                <label class="w3-label">Shop Name</label>
+                <input class="w3-input" type="text" name="ShopName" placeholder="Shop Name">
+                <label class="w3-label">Category</label>
+                <input class="w3-input" type="text" name="Category" placeholder="Category">
                 <button class="w3-btn w3-teal w3-margin-top w3-margin-bottom w3-right" type="submit">Create</button>
             </form>
         </div>
@@ -128,18 +128,20 @@
                       onclick="document.getElementById('edit-form').style.display='none'">&times;</span>
             </div>
 
-            <form class="w3-container" action="/updateCustomer" method="post">
-                <input type="hidden" name="Id" id="customerIdToUpdate">
-                <label class="w3-label">Name</label>
-                <input class="w3-input" type="text" name="Name" placeholder="Updated Name of Customer">
+            <form class="w3-container" action="/updateRetailer" method="post">
+                <input type="hidden" name="Id" id="costIdToUpdate">
                 <label class="w3-label">Email</label>
                 <input class="w3-input" type="text" name="Email" placeholder="Updated Email">
-                <label class="w3-label">Credit Amount</label>
-                <input class="w3-input" type="number" name="Amount" placeholder="Updated Credit Amount">
-                <label class="w3-label">Number</label>
-                <input class="w3-input" type="text" name="Number" placeholder="Updated Contact Number">
-                <label class="w3-label">Credit Date</label>
-                <input class="w3-input" type="date" name="CreditDate" placeholder="Updated Credit Date">
+                <label class="w3-label">Address</label>
+                <input class="w3-input" type="text" name="Address" placeholder="Updated Address">
+                <label class="w3-label">City</label>
+                <input class="w3-input" type="text" name="City" placeholder=" Updated City">
+                <label class="w3-label">State</label>
+                <input class="w3-input" type="text" name="State" placeholder="Updated State">
+                <label class="w3-label">Shop Name</label>
+                <input class="w3-input" type="text" name="ShopName" placeholder="Updated Shop Name">
+                <label class="w3-label">Category</label>
+                <input class="w3-input" type="text" name="Category" placeholder="Updated Category">
                 <button class="w3-btn w3-teal w3-margin-top w3-margin-bottom w3-right" type="submit">Save</button>
             </form>
         </div>
@@ -158,8 +160,8 @@
                       onclick="document.getElementById('delete-form').style.display='none'">&times;</span>
             </div>
 
-            <form class="w3-container" action="/deleteCustomer" method="post">
-                <input type="hidden" name="Id" id="customerIdToDelete">
+            <form class="w3-container" action="/deleteRetailer" method="post">
+                <input type="hidden" name="Id" id="costIdToDelete">
                 <div class="w3-center">
                     <button class="w3-btn w3-red w3-margin-top w3-margin-bottom" type="submit">Delete</button>
                     <button type="button" class="w3-btn w3-teal w3-margin-top w3-margin-bottom"
@@ -171,56 +173,21 @@
     </div>
 </div>
 
-<!-- generate PDF Modals -->
-<div class="w3-container">
-  <div id="pdf-form" class="w3-modal">
-      <div class="w3-modal-content w3-card-8 w3-animate-zoom" style="max-width: 600px;">
-          <!-- head -->
-          <div class="w3-container w3-teal">
-              <h2>Generate PDF</h2>
-              <span class="w3-closebtn w3-hover-red w3-container w3-padding-8 w3-display-topright"
-                    onclick="document.getElementById('pdf-form').style.display='none'">&times;</span>
-          </div>
-
-          <form class="w3-container" action="/generatePdf" method="GET">
-              <input type="hidden" name="Id" id="customerIdToPrint">
-              <div class="w3-center">
-                  <button class="w3-btn w3-red w3-margin-top w3-margin-bottom" type="submit">Download</button>
-                  <button type="button" class="w3-btn w3-teal w3-margin-top w3-margin-bottom"
-                          onclick="document.getElementById('pdf-form').style.display='none'">Cancel
-                  </button>
-              </div>
-          </form>
-      </div>
-  </div>
-</div>
-<script> 
-  function createCustomer(){
-    var createForm = document.getElementById('create-form');
-    createForm.style.display = 'block';
-
-  }
-  function updateCustomer(e) {
+<script>
+  function updateCost(e) {
     var editForm = document.getElementById('edit-form');
     // display update form
     editForm.style.display = 'block';
     // get cost id to update
-    var customerId = e.parentNode.parentNode.childNodes[3].innerText;
-    document.getElementById('customerIdToUpdate').value = customerId;
+    var costId = e.parentNode.parentNode.childNodes[3].innerText;
+    document.getElementById('costIdToUpdate').value = costId;
   }
 
-  function deleteCustomer(e) {
+  function deleteCost(e) {
     var deleteForm = document.getElementById('delete-form');
     deleteForm.style.display = 'block';
-    var customerId = e.parentNode.parentNode.childNodes[3].innerText;
-    document.getElementById('customerIdToDelete').value = customerId;
-  }
-
-  function generatePdf(e) {
-    var pdfForm = document.getElementById('pdf-form');
-    pdfForm.style.display = 'block';
-    var customerId = e.parentNode.parentNode.childNodes[3].innerText;
-    document.getElementById('customerIdToPrint').value = customerId;
+    var costId = e.parentNode.parentNode.childNodes[3].innerText;
+    document.getElementById('costIdToDelete').value = costId;
   }
 
   function sortTable(n) {
@@ -294,7 +261,7 @@ function searchFunction() {
       if (txtValue.toUpperCase().indexOf(filter) > -1) {
         tr[i].style.display = "";
       } else {
-        tr[i].style.display = "none"
+        tr[i].style.display = "none";
       }
     }
   }

@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	os.Setenv("PORT", "2300")
+	os.Setenv("PORT", "2301")
 	port := os.Getenv("PORT")
 	if port == "" {
 		log.Fatal("$PORT must be set")
@@ -37,10 +37,15 @@ func main() {
 	http.HandleFunc("/logout", logoutHandler)
 	http.HandleFunc("/register", registerHandler)
 	http.HandleFunc("/forgot", forgotHandler)
+	http.HandleFunc("/listAdmin", listAdminHandler)
 	http.HandleFunc("/list", listHandler)
-	http.HandleFunc("/create", createHandler)
-	http.HandleFunc("/update", updateHandler)
-	http.HandleFunc("/delete", deleteHandler)
+	http.HandleFunc("/createRetailer", createRetailerHandler)
+	http.HandleFunc("/createCustomer", createCustomerHandler)
+	http.HandleFunc("/updateRetailer", updateRetailerHandler)
+	http.HandleFunc("/updateCustomer", updateCustomerHandler)
+	http.HandleFunc("/deleteCustomer", deleteCustomerHandler)
+	http.HandleFunc("/deleteRetailer", deleteRetailerHandler)
+	http.HandleFunc("/generatePdf", generatePDFHandler)
 	http.Handle("/css/",
 		http.StripPrefix("/css/", http.FileServer(http.Dir("./css"))),
 	)

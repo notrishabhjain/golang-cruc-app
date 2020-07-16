@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/jung-kurt/gofpdf"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -57,7 +58,7 @@ func forgotHandler(w http.ResponseWriter, r *http.Request) {
 	checkInternalServerError(err, w)
 	_, err = res.RowsAffected()
 	checkInternalServerError(err, w)
-	http.Redirect(w, r, "/", 301)
+	http.Redirect(w, r, "/login", 301)
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +80,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", 301)
 	}
 	authenticated = true
-	http.Redirect(w, r, "/list", 301)
+	if user.Username == "admin123" {
+		http.Redirect(w, r, "/listAdmin", 301)
+	} else {
+		http.Redirect(w, r, "/list", 301)
+	}
 
 }
 
@@ -88,7 +93,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	isAuthenticated(w, r)
 }
 
-func listHandler(w http.ResponseWriter, r *http.Request) {
+func listAdminHandler(w http.ResponseWriter, r *http.Request) {
 	isAuthenticated(w, r)
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", http.StatusBadRequest)
@@ -111,14 +116,41 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 		checkInternalServerError(err, w)
 		costs = append(costs, cost)
 	}
-	t, err := template.New("list.html").Funcs(funcMap).ParseFiles("template/list.html")
+	t, err := template.New("listAdmin.html").Funcs(funcMap).ParseFiles("template/listAdmin.html")
 	checkInternalServerError(err, w)
 	err = t.Execute(w, costs)
 	checkInternalServerError(err, w)
 
 }
 
-func createHandler(w http.ResponseWriter, r *http.Request) {
+func listHandler(w http.ResponseWriter, r *http.Request) {
+	isAuthenticated(w, r)
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusBadRequest)
+	}
+	rows, err := db.Query("SELECT * FROM Customer")
+	checkInternalServerError(err, w)
+	var funcMap = template.FuncMap{
+		"addOne": func(n int) int {
+			return n + 1
+		},
+	}
+	var customers []Customer
+	var customer Customer
+	for rows.Next() {
+		err = rows.Scan(&customer.CusID, &customer.ID, &customer.Name,
+			&customer.Email, &customer.Amount, &customer.Number, &customer.CreditDate)
+		checkInternalServerError(err, w)
+		customers = append(customers, customer)
+	}
+	t, err := template.New("list.html").Funcs(funcMap).ParseFiles("template/list.html")
+	checkInternalServerError(err, w)
+	err = t.Execute(w, customers)
+	checkInternalServerError(err, w)
+
+}
+
+func createRetailerHandler(w http.ResponseWriter, r *http.Request) {
 	isAuthenticated(w, r)
 	if r.Method != "POST" {
 		http.Redirect(w, r, "/", 301)
@@ -147,10 +179,42 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Execute query error")
 		panic(err)
 	}
-	http.Redirect(w, r, "/", 301)
+	http.Redirect(w, r, "/listAdmin", 301)
 }
 
-func updateHandler(w http.ResponseWriter, r *http.Request) {
+func createCustomerHandler(w http.ResponseWriter, r *http.Request) {
+	isAuthenticated(w, r)
+	if r.Method != "POST" {
+		http.Redirect(w, r, "/", 301)
+	}
+	var customer Customer
+	var user User
+	customer.ID = user.ID
+	customer.Name = r.FormValue("Name")
+	customer.Email = r.FormValue("Email")
+	customer.Amount = r.FormValue("Amount")
+	customer.Number = r.FormValue("Number")
+	customer.CreditDate = r.FormValue("CreditDate")
+
+	// Save to database
+	stmt, err := db.Prepare(`
+		INSERT INTO Customer(retailerID, name, email, amount, number, creditdate)
+		VALUES(?, ?, ?, ?, ?, ?)
+	`)
+	if err != nil {
+		fmt.Println("Prepare query error")
+		panic(err)
+	}
+	_, err = stmt.Exec(customer.ID, customer.Name, customer.Email,
+		customer.Amount, customer.Number, customer.CreditDate)
+	if err != nil {
+		fmt.Println("Execute query error")
+		panic(err)
+	}
+	http.Redirect(w, r, "/list", 301)
+}
+
+func updateRetailerHandler(w http.ResponseWriter, r *http.Request) {
 	isAuthenticated(w, r)
 	if r.Method != "POST" {
 		http.Redirect(w, r, "/", 301)
@@ -173,10 +237,35 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 	checkInternalServerError(err, w)
 	_, err = res.RowsAffected()
 	checkInternalServerError(err, w)
-	http.Redirect(w, r, "/", 301)
+	http.Redirect(w, r, "/listAdmin", 301)
 }
 
-func deleteHandler(w http.ResponseWriter, r *http.Request) {
+func updateCustomerHandler(w http.ResponseWriter, r *http.Request) {
+	isAuthenticated(w, r)
+	if r.Method != "POST" {
+		http.Redirect(w, r, "/", 301)
+	}
+	var customer Customer
+	customer.CusID, _ = strconv.ParseInt(r.FormValue("Id"), 10, 64)
+	customer.Name = r.FormValue("Name")
+	customer.Email = r.FormValue("Email")
+	customer.Amount = r.FormValue("Amount")
+	customer.Number = r.FormValue("Number")
+	customer.CreditDate = r.FormValue("CreditDate")
+	//fmt.Println(customer)
+	stmt, err := db.Prepare(`
+		UPDATE Customer SET name=?, email=?, amount=?, number=?, creditDate=?
+		WHERE cusid=?
+	`)
+	checkInternalServerError(err, w)
+	res, err := stmt.Exec(customer.Name, customer.Email, customer.Amount, customer.Number, customer.CreditDate, customer.CusID)
+	checkInternalServerError(err, w)
+	_, err = res.RowsAffected()
+	checkInternalServerError(err, w)
+	http.Redirect(w, r, "/list", 301)
+}
+
+func deleteRetailerHandler(w http.ResponseWriter, r *http.Request) {
 	isAuthenticated(w, r)
 	if r.Method != "POST" {
 		http.Redirect(w, r, "/", 301)
@@ -188,11 +277,57 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	checkInternalServerError(err, w)
 	_, err = res.RowsAffected()
 	checkInternalServerError(err, w)
-	http.Redirect(w, r, "/", 301)
+	http.Redirect(w, r, "/listAdmin", 301)
+
+}
+
+func deleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
+	isAuthenticated(w, r)
+	if r.Method != "POST" {
+		http.Redirect(w, r, "/", 301)
+	}
+	var cusID, _ = strconv.ParseInt(r.FormValue("Id"), 10, 64)
+	stmt, err := db.Prepare("DELETE FROM Customer WHERE cusid=?")
+	checkInternalServerError(err, w)
+	res, err := stmt.Exec(cusID)
+	checkInternalServerError(err, w)
+	_, err = res.RowsAffected()
+	checkInternalServerError(err, w)
+	http.Redirect(w, r, "/list", 301)
+
+}
+
+func generatePDFHandler(w http.ResponseWriter, r *http.Request) {
+	isAuthenticated(w, r)
+	if r.Method != "GET" {
+		http.Redirect(w, r, "/", 301)
+	}
+	var customer Customer
+	var cusID, _ = strconv.ParseInt(r.FormValue("Id"), 10, 64)
+	err := db.QueryRow("SELECT * from Customer WHERE cusid=?", cusID).Scan(&customer.CusID,
+		&customer.ID, &customer.Name, &customer.Email, &customer.Amount,
+		&customer.Number, &customer.CreditDate)
+	checkInternalServerError(err, w)
+	fmt.Println(customer)
+
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 16)
+	//pdf.CellFormat(190, 7, strconv.Itoa(int(customer.CusID)), "0", 0, "CM", false, 0, "")
+	pdf.CellFormat(190, 7, strconv.Itoa(int(customer.CusID))+" "+customer.Name+" "+customer.Email+
+		" "+customer.Amount+" "+customer.Number+" "+customer.CreditDate, "0", 0, "CM", false, 0, "")
+	pdf.OutputFileAndClose("download1.pdf")
+	http.ServeFile(w, r, "download1.pdf")
+	checkInternalServerError(err, w)
+	if err != nil {
+		panic(err)
+	}
+	checkInternalServerError(err, w)
+	http.Redirect(w, r, "/list", 301)
 
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	isAuthenticated(w, r)
-	http.Redirect(w, r, "/list", 301)
+	http.Redirect(w, r, "/", 301)
 }

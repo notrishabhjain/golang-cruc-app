@@ -18,3 +18,14 @@ type User struct {
 	Password string `json:"password"`
 	Role     int64  `json:"role"`
 }
+
+//Customer ..
+type Customer struct {
+	ID         int64  `json:"id"`
+	CusID      int64  `json:"cusId"`
+	Name       string `json:"name"`
+	Email      string `json:"email"`
+	Amount     string `json:"amount"`
+	Number     string `json:"number"`
+	CreditDate string `json:"credit_date"`
+}
