@@ -29,3 +29,11 @@ type Customer struct {
 	Number     string `json:"number"`
 	CreditDate string `json:"credit_date"`
 }
+
+//Products ..
+type Products struct {
+	Brand string  `json:"brand"`
+	Model string  `json:"model"`
+	Price int64   `json:"price"`
+	Tax   float64 `json:"tax"`
+}

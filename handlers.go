@@ -6,6 +6,8 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/jung-kurt/gofpdf"
 	"golang.org/x/crypto/bcrypt"
@@ -219,8 +221,11 @@ func updateRetailerHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Redirect(w, r, "/", 301)
 	}
-	var cost Cost
+	var cost, oldCost Cost
 	cost.ID, _ = strconv.ParseInt(r.FormValue("Id"), 10, 64)
+	oldCost.ID, _ = strconv.ParseInt(r.FormValue("Id"), 10, 64)
+	err := db.QueryRow("SELECT email, address, city, state, shop_name, category from cost WHERE id=?", oldCost.ID).Scan(&oldCost.Email,
+		&oldCost.Address, &oldCost.City, &oldCost.State, &oldCost.ShopName, &oldCost.Category)
 	cost.Email = r.FormValue("Email")
 	cost.Address = r.FormValue("Address")
 	cost.City = r.FormValue("City")
@@ -303,21 +308,167 @@ func generatePDFHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", 301)
 	}
 	var customer Customer
+	var p1 Products
+	var p2, p3, p4, p5 Products
+	var tA1, tA2, tA3, tA4, tA5 int64
 	var cusID, _ = strconv.ParseInt(r.FormValue("Id"), 10, 64)
+	//var cat = r.FormValue("category1")
+	var subcat1 = r.FormValue("subcategory1")
+	var subcat2 = r.FormValue("subcategory2")
+	var subcat3 = r.FormValue("subcategory3")
+	var subcat4 = r.FormValue("subcategory4")
+	var subcat5 = r.FormValue("subcategory5")
+	var q1, _ = strconv.ParseInt(r.FormValue("quantity1"), 10, 64)
+	var q2, _ = strconv.ParseInt(r.FormValue("quantity2"), 10, 64)
+	var q3, _ = strconv.ParseInt(r.FormValue("quantity3"), 10, 64)
+	var q4, _ = strconv.ParseInt(r.FormValue("quantity4"), 10, 64)
+	var q5, _ = strconv.ParseInt(r.FormValue("quantity5"), 10, 64)
+
 	err := db.QueryRow("SELECT * from Customer WHERE cusid=?", cusID).Scan(&customer.CusID,
 		&customer.ID, &customer.Name, &customer.Email, &customer.Amount,
 		&customer.Number, &customer.CreditDate)
 	checkInternalServerError(err, w)
 	fmt.Println(customer)
 
+	err = db.QueryRow("Select * from products where model=?", subcat1).Scan(&p1.Brand,
+		&p1.Model, &p1.Price, &p1.Tax)
+	if err == sql.ErrNoRows {
+		http.Redirect(w, r, "/list", http.StatusMovedPermanently)
+	}
+	a1 := q1 * p1.Price
+
+	tA1 = a1 + int64(float64(a1)*p1.Tax)
+	fmt.Println(tA1)
+
+	switch {
+	case subcat2 != "" && q2 > 0:
+		err = db.QueryRow("Select * from products where model=?", subcat2).Scan(&p2.Brand,
+			&p2.Model, &p2.Price, &p2.Tax)
+		if err == sql.ErrNoRows {
+			goto pdfgen
+		}
+		a2 := q2 * p2.Price
+
+		tA2 = a2 + int64(float64(a2)*p2.Tax)
+		fmt.Println(tA2)
+		fallthrough
+
+	case subcat3 != "" && q3 > 0:
+		err = db.QueryRow("Select * from products where model=?", subcat3).Scan(&p3.Brand,
+			&p3.Model, &p3.Price, &p3.Tax)
+		if err == sql.ErrNoRows {
+			goto pdfgen
+		}
+		a3 := q3 * p3.Price
+
+		tA3 = a3 + int64(float64(a3)*p3.Tax)
+		fmt.Println(tA3)
+		fallthrough
+
+	case subcat4 != "" && q4 > 0:
+		err = db.QueryRow("Select * from products where model=?", subcat4).Scan(&p4.Brand,
+			&p4.Model, &p4.Price, &p4.Tax)
+		if err == sql.ErrNoRows {
+			goto pdfgen
+		}
+		a4 := q4 * p4.Price
+
+		tA4 = a4 + int64(float64(a4)*p4.Tax)
+		fmt.Println(tA4)
+		fallthrough
+
+	case subcat5 != "" && q5 > 0:
+		err = db.QueryRow("Select * from products where model=?", subcat5).Scan(&p5.Brand,
+			&p5.Model, &p5.Price, &p5.Tax)
+		if err == sql.ErrNoRows {
+			goto pdfgen
+		}
+		a5 := q5 * p5.Price
+
+		tA5 = a5 + int64(float64(a5)*p5.Tax)
+		fmt.Println(tA5)
+
+	}
+pdfgen:
+	totalAmount := tA1 + tA2 + tA3 + tA4 + tA5
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
-	pdf.SetFont("Arial", "B", 16)
-	//pdf.CellFormat(190, 7, strconv.Itoa(int(customer.CusID)), "0", 0, "CM", false, 0, "")
-	pdf.CellFormat(190, 7, strconv.Itoa(int(customer.CusID))+" "+customer.Name+" "+customer.Email+
-		" "+customer.Amount+" "+customer.Number+" "+customer.CreditDate, "0", 0, "CM", false, 0, "")
-	pdf.OutputFileAndClose("download1.pdf")
-	http.ServeFile(w, r, "download1.pdf")
+	pdf.SetFont("Arial", "B", 14)
+	pdf.CellFormat(100, 7, "Customer Details", "0", 0, "LT", false, 0, "")
+	pdf.CellFormat(100, 7, "Retailer Details    ", "0", 0, "RT", false, 0, "")
+	pdf.Ln(-1)
+	pdf.SetFont("Arial", "", 12)
+	pdf.CellFormat(100, 7, strings.Title(customer.Name), "0", 0, "LT", false, 0, "")
+	pdf.CellFormat(100, 7, "Mobile Solutions    ", "0", 0, "RT", false, 0, "")
+	pdf.Ln(-1)
+	pdf.SetFont("Arial", "", 12)
+	pdf.CellFormat(100, 7, customer.Email, "0", 0, "LT", false, 0, "")
+	pdf.CellFormat(100, 7, "admin@mobile.in    ", "0", 0, "RT", false, 0, "")
+	pdf.Ln(-1)
+	pdf.SetFont("Arial", "", 12)
+	pdf.CellFormat(100, 7, customer.Number, "0", 0, "LT", false, 0, "")
+	pdf.CellFormat(100, 7, "+919999888877    ", "0", 0, "RT", false, 0, "")
+	pdf.Ln(-1)
+	pdf.CellFormat(100, 7, time.Now().Format("02-01-2006"), "0", 0, "LT", false, 0, "")
+	pdf.Ln(25)
+	pdf.SetFont("Arial", "B", 14)
+	pdf.CellFormat(190, 7, "PARTICULARS", "0", 0, "CM", false, 0, "")
+	pdf.Ln(10)
+	pdf.CellFormat(100, 7, "S.No.     Items                                                     Quantity    Price    Tax    Amount", "0", 0, "LT", false, 0, "")
+	pdf.Ln(10)
+	pdf.SetFont("Arial", "", 14)
+	pdf.CellFormat(100, 7, "1."+"            "+strings.Title(p1.Brand)+" "+strings.Title(p1.Model), "0", 0, "LT", false, 0, "")
+	pdf.CellFormat(11, 7, "          "+strconv.Itoa(int(q1)), "0", 0, "LT", false, 0, "")
+	pdf.CellFormat(20, 7, "              "+strconv.Itoa(int(p1.Price)), "0", 0, "LT", false, 0, "")
+	pdf.CellFormat(16, 7, "            "+strconv.FormatFloat(p1.Tax, 'f', 2, 64), "0", 0, "LT", false, 0, "")
+	pdf.CellFormat(34, 7, "             "+strconv.Itoa(int(tA1)), "0", 0, "LT", false, 0, "")
+	if subcat2 != "" {
+		pdf.Ln(10)
+		pdf.SetFont("Arial", "", 14)
+		pdf.CellFormat(100, 7, "2."+"            "+strings.Title(p2.Brand)+" "+strings.Title(p2.Model), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(11, 7, "          "+strconv.Itoa(int(q2)), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(20, 7, "              "+strconv.Itoa(int(p2.Price)), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(16, 7, "            "+strconv.FormatFloat(p2.Tax, 'f', 2, 64), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(34, 7, "             "+strconv.Itoa(int(tA2)), "0", 0, "LT", false, 0, "")
+	}
+	if subcat3 != "" {
+		pdf.Ln(10)
+		pdf.SetFont("Arial", "", 14)
+		pdf.CellFormat(100, 7, "3."+"            "+strings.Title(p3.Brand)+" "+strings.Title(p3.Model), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(11, 7, "          "+strconv.Itoa(int(q3)), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(20, 7, "              "+strconv.Itoa(int(p3.Price)), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(16, 7, "            "+strconv.FormatFloat(p3.Tax, 'f', 2, 64), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(34, 7, "             "+strconv.Itoa(int(tA3)), "0", 0, "LT", false, 0, "")
+	}
+	if subcat4 != "" {
+		pdf.Ln(10)
+		pdf.SetFont("Arial", "", 14)
+		pdf.CellFormat(100, 7, "4."+"            "+strings.Title(p4.Brand)+" "+strings.Title(p4.Model), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(11, 7, "          "+strconv.Itoa(int(q4)), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(20, 7, "              "+strconv.Itoa(int(p4.Price)), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(16, 7, "            "+strconv.FormatFloat(p4.Tax, 'f', 2, 64), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(34, 7, "             "+strconv.Itoa(int(tA4)), "0", 0, "LT", false, 0, "")
+	}
+	if subcat5 != "" {
+		pdf.Ln(10)
+		pdf.SetFont("Arial", "", 14)
+		pdf.CellFormat(100, 7, "5."+"            "+strings.Title(p5.Brand)+" "+strings.Title(p5.Model), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(11, 7, "          "+strconv.Itoa(int(q5)), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(20, 7, "              "+strconv.Itoa(int(p5.Price)), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(16, 7, "            "+strconv.FormatFloat(p5.Tax, 'f', 2, 64), "0", 0, "LT", false, 0, "")
+		pdf.CellFormat(34, 7, "             "+strconv.Itoa(int(tA5)), "0", 0, "LT", false, 0, "")
+	}
+	pdf.Ln(25)
+	pdf.SetFont("Arial", "B", 14)
+	pdf.CellFormat(190, 7, "                                                                         	  Total: "+"   "+strconv.Itoa(int(totalAmount)), "0", 0, "CM", false, 0, "")
+	pdf.Ln(70)
+	pdf.SetFont("Arial", "", 14)
+	pdf.CellFormat(100, 7, "Thank you for trading with us. Errors and Omissions expected.", "0", 0, "LT", false, 0, "")
+	// pdf.SetFont("Arial", "", 10)
+	// pdf.CellFormat(190, 7, strconv.Itoa(int(customer.CusID))+" "+customer.Name+" "+customer.Email+
+	// 	" "+customer.Amount+" "+customer.Number+" "+customer.CreditDate+subcat1+strconv.Itoa(int(totalAmount)), "0", 0, "CM", false, 0, "")
+	pdf.OutputFileAndClose("./download.pdf")
+	http.ServeFile(w, r, "download.pdf")
 	checkInternalServerError(err, w)
 	if err != nil {
 		panic(err)

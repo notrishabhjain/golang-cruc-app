@@ -17,7 +17,7 @@
         }
 
         #searchInput {
-            background-image: url('/css/searchicon.png'); /* Add a search icon to input */
+            background-image: url('/css/images/searchicon.png'); /* Add a search icon to input */
             background-position: 10px 12px; /* Position the search icon */
             background-repeat: no-repeat; /* Do not repeat the icon image */
             width: 100%; /* Full-width */
@@ -26,7 +26,76 @@
             border: 1px solid #ddd; /* Add a grey border */
             margin-bottom: 12px; /* Add some space below the input */
         }
+
+        *  {
+	-moz-box-sizing: border-box;
+	-o-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+}
+body {
+	color: #333;
+	font-size: 1em;
+}
+a:link,
+a:visited,
+a:hover,
+a:active {
+	color: #000;
+	text-decoration: none;
+}
+.container {
+  margin: 50px auto;
+  padding: 0 50px;
+  max-width: 960px;
+}
+table { 
+	background: #FFF;
+	border-collapse: collapse;
+	width: 100%;  
+}
+td,
+th { 
+	padding: 4px; 
+	border: 2px solid #000;
+	overflow: hidden;
+	text-align: left;
+	vertical-align: middle;
+}
+th { 
+	background-color: #DDD; 
+	font-weight: 600;
+}
+th a,
+td a { 
+	display: block;
+	width: 100%;
+}
+th a.sort-by { 
+	padding-right: 18px;
+	position: relative;
+}
+a.sort-by:before,
+a.sort-by:after {
+	border: 4px solid transparent;
+	content: "";
+	display: block;
+	height: 0;
+	right: 5px;
+	top: 50%;
+	position: absolute;
+	width: 0;
+}
+a.sort-by:before {
+	border-bottom-color: #666;
+	margin-top: -9px;
+}
+a.sort-by:after {
+	border-top-color: #666;
+	margin-top: 1px;
+}
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 <body>
 <div class="w3-row-padding">
@@ -48,42 +117,43 @@
                 </div>
             </div>
         </header>
-        <input type="text" id="searchInput" onkeyup="searchFunction()" placeholder="Search for email..">
+        <input type="text" id="searchInput" onkeyup="searchFunction()" placeholder="Search">
 
         <table class="w3-table w3-centered w3-border w3-bordered w3-hoverable" id= "userTable">
-            <thead>
-            <tr>
-                <th onclick="sortTable(0)">No</th>
-                <th onclick="sortTable(1)">Id</th>
-                <th onclick="sortTable(2)">Name</th>
-                <th onclick="sortTable(3)">Email</th>
-                <th onclick="sortTable(4)">Amount</th>
-                <th onclick="sortTable(5)">Contact Number</th>
-                <th onclick="sortTable(6)">Credit Date</th>
-                <th>Actions</th>
+          <thead>
+          <tr>
+              <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(0)">No</a></th>
+              <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(1)">Id</a></th>
+              <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(2)">Name</a></th>
+              <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(3)">Email</a></th>
+              <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(4)">Amount</a></th>
+              <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(5)">Contact Number</a></th>
+              <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(6)">Credit Date</a></th>
+              <th>Actions</th>
 
-            </tr>
-            </thead>
-            <tbody>
-            {{range $index, $Customer := .}}
-            <tr>
-                <td>#{{addOne $index}}</td>
-                <td>{{$Customer.CusID}}</td>
-                <td>{{$Customer.Name}}</td>
-                <td>{{$Customer.Email}}</td>
-                <td>{{$Customer.Amount}}</td>
-                <td>{{$Customer.Number}}</td>
-                <td>{{$Customer.CreditDate}}</td>
-                <!--<td>{{$Customer.CreditDate}}</td>-->
-                <td>
-                    <button class="w3-btn w3-teal" onclick="updateCustomer(this);">Modify</button>
-                    <button class="w3-btn w3-red" onclick="deleteCustomer(this)">Delete</button>
-                    <button class="w3-btn w3-teal" onclick="generatePdf(this);">Generate PDF</button>
-                </td>
-            </tr>
-            {{end}}
-            </tbody>
-        </table>
+          </tr>
+          </thead>
+          <tbody>
+          {{range $index, $Customer := .}}
+          <tr>
+              <td>#{{addOne $index}}</td>
+              <td>{{$Customer.CusID}}</td>
+              <td name = "Name" id="username">{{$Customer.Name}}</td>
+              <td name = "Email" id="useremail">{{$Customer.Email}}</td>
+              <td name = "Amount" id="useramt">{{$Customer.Amount}}</td>
+              <td name = "Number" id="usernum">{{$Customer.Number}}</td>
+              <td name = "CreditDate" id="userdate">{{$Customer.CreditDate}}</td>
+              <!--<td>{{$Customer.CreditDate}}</td>-->
+              <td>
+                  <button class="w3-btn w3-teal" onclick="updateCustomer(this);">Modify</button>
+                  <button class="w3-btn w3-red" onclick="deleteCustomer(this)">Delete</button>
+                  <button class="w3-btn w3-teal" onclick="generatePdf(this);">Place Order</button>
+              </td>
+          </tr>
+          {{end}}
+          </tbody>
+      </table>
+
     </div>
 </div>
 
@@ -117,7 +187,7 @@
 </div>
 
 
-<!-- Edit Modals -->
+<!-- Edit Model -->
 <div class="w3-container">
     <div id="edit-form" class="w3-modal">
         <div class="w3-modal-content w3-card-8 w3-animate-zoom" style="max-width: 600px;">
@@ -131,7 +201,7 @@
             <form class="w3-container" action="/updateCustomer" method="post">
                 <input type="hidden" name="Id" id="customerIdToUpdate">
                 <label class="w3-label">Name</label>
-                <input class="w3-input" type="text" name="Name" placeholder="Updated Name of Customer">
+                <input class="w3-input" type="text" name="Name" id="editname" placeholder="Updated Name of Customer">
                 <label class="w3-label">Email</label>
                 <input class="w3-input" type="text" name="Email" placeholder="Updated Email">
                 <label class="w3-label">Credit Amount</label>
@@ -147,7 +217,7 @@
 </div>
 
 
-<!-- Delete Modals -->
+<!-- Delete Model -->
 <div class="w3-container">
     <div id="delete-form" class="w3-modal">
         <div class="w3-modal-content w3-card-8 w3-animate-zoom" style="max-width: 600px;">
@@ -171,25 +241,129 @@
     </div>
 </div>
 
-<!-- generate PDF Modals -->
+<!-- generate Order Model -->
 <div class="w3-container">
-  <div id="pdf-form" class="w3-modal">
+  <div id="order-form" class="w3-modal">
       <div class="w3-modal-content w3-card-8 w3-animate-zoom" style="max-width: 600px;">
           <!-- head -->
           <div class="w3-container w3-teal">
-              <h2>Generate PDF</h2>
+              <h2>Place Order</h2>
               <span class="w3-closebtn w3-hover-red w3-container w3-padding-8 w3-display-topright"
-                    onclick="document.getElementById('pdf-form').style.display='none'">&times;</span>
+                    onclick="document.getElementById('order-form').style.display='none'">&times;</span>
           </div>
 
           <form class="w3-container" action="/generatePdf" method="GET">
               <input type="hidden" name="Id" id="customerIdToPrint">
               <div class="w3-center">
-                  <button class="w3-btn w3-red w3-margin-top w3-margin-bottom" type="submit">Download</button>
+              <div class=repeatingSection>
+                  <select name="category1" class="required-entry" id="category1" onchange="javascript: dynamicdropdown1(this.options[this.selectedIndex].value);">
+                      <option value="">Select Brand</option>
+                      <option value="Apple">Apple</option>
+                      <option value="OnePlus">OnePlus</option>
+                      <option value="Samsung">Samsung</option>
+                  </select>
+                
+                
+                  <script type="text/javascript" language="JavaScript">
+                     document.write('<select name="subcategory1" id="subcategory1"><option value="">Select Model</option></select>')
+                  </script>
+                <input type="number" id="quantity1" name="quantity1" min="1" max="5">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              
+              <button class="w3-btn w3-teal w3-margin-top w3-margin-bottom" type="button" id="addBtn1">Add</button> 
+              <output id= "output1"></output>
+              
+              <div class= repeat1 hidden>
+                
+                <select name="category2" class="required-entry" id="category2" onchange="javascript: dynamicdropdown2(this.options[this.selectedIndex].value);">
+                    <option value=""|| null>Select Brand</option>
+                    <option value="Apple">Apple</option>
+                    <option value="OnePlus">OnePlus</option>
+                    <option value="Samsung">Samsung</option>
+                </select>
+              
+             
+                <script type="text/javascript" language="JavaScript">
+                   document.write('<select name="subcategory2" id="subcategory2"><option value="">Select Model</option></select>')
+                </script>
+
+              
+              
+              <input type="number" id="quantity2" name="quantity2" min="1" max="5">
+            
+            <button class="w3-btn w3-teal w3-margin-top w3-margin-bottom" type="button" id="addBtn2">Add</button>
+            <button class="w3-btn w3-red w3-margin-top w3-margin-bottom" type="button" id="rmvBtn2">Remove</button>
+          </div>
+          <div class= repeat2 hidden>
+            
+              <select name="category3" class="required-entry" id="category3" onchange="javascript: dynamicdropdown3(this.options[this.selectedIndex].value);">
+                  <option value=""|| null>Select Brand</option>
+                  <option value="Apple">Apple</option>
+                  <option value="OnePlus">OnePlus</option>
+                  <option value="Samsung">Samsung</option>
+              </select>
+            
+            
+              <script type="text/javascript" language="JavaScript">
+                 document.write('<select name="subcategory3" id="subcategory3"><option value="">Select Model</option></select>')
+              </script>
+
+            
+            
+            <input type="number" id="quantity3" name="quantity3" min="1" max="5">
+          
+          <button class="w3-btn w3-teal w3-margin-top w3-margin-bottom" type="button" id="addBtn3">Add</button>
+          <button class="w3-btn w3-red w3-margin-top w3-margin-bottom" type="button" id="rmvBtn3">Remove</button>
+        </div>  
+        <div class= repeat3 hidden>
+          
+            <select name="category4" class="required-entry" id="category4" onchange="javascript: dynamicdropdown4(this.options[this.selectedIndex].value);">
+                <option value=""|| null>Select Brand</option>
+                <option value="Apple">Apple</option>
+                <option value="OnePlus">OnePlus</option>
+                <option value="Samsung">Samsung</option>
+            </select>
+          
+          
+            <script type="text/javascript" language="JavaScript">
+               document.write('<select name="subcategory4" id="subcategory4"><option value="">Select Model</option></select>')
+            </script>
+
+          
+          
+          <input type="number" id="quantity2" name="quantity4" min="1" max="5">
+        
+        <button class="w3-btn w3-teal w3-margin-top w3-margin-bottom" type="button" id="addBtn4">Add</button>
+        <button class="w3-btn w3-red w3-margin-top w3-margin-bottom" type="button" id="rmvBtn4">Remove</button>
+      </div>  
+      <div class= repeat4 hidden>
+        
+          <select name="category5" class="required-entry" id="category5" onchange="javascript: dynamicdropdown5(this.options[this.selectedIndex].value);">
+              <option value=""|| null>Select Brand</option>
+              <option value="Apple">Apple</option>
+              <option value="OnePlus">OnePlus</option>
+              <option value="Samsung">Samsung</option>
+          </select>
+        
+        
+          <script type="text/javascript" language="JavaScript">
+             document.write('<select name="subcategory5" id="subcategory5"><option value="">Select Model</option></select>')
+          </script>
+
+        
+        
+        <input type="number" id="quantity5" name="quantity5" min="1" max="5">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      
+      <button class="w3-btn w3-red w3-margin-top w3-margin-bottom" type="button" id="rmvBtn5">Remove</button>
+    </div>
+
+            </div>
+              <br><br><br><br><br><br><br><br>
+                  <button class="w3-btn w3-red w3-margin-top w3-margin-bottom" type="submit">Generate Bill</button>
                   <button type="button" class="w3-btn w3-teal w3-margin-top w3-margin-bottom"
-                          onclick="document.getElementById('pdf-form').style.display='none'">Cancel
+                          onclick="document.getElementById('order-form').style.display='none'">Cancel
                   </button>
               </div>
+              
           </form>
       </div>
   </div>
@@ -202,7 +376,7 @@
   }
   function updateCustomer(e) {
     var editForm = document.getElementById('edit-form');
-    // display update form
+    // display update-form;
     editForm.style.display = 'block';
     // get cost id to update
     var customerId = e.parentNode.parentNode.childNodes[3].innerText;
@@ -217,8 +391,8 @@
   }
 
   function generatePdf(e) {
-    var pdfForm = document.getElementById('pdf-form');
-    pdfForm.style.display = 'block';
+    var orderForm = document.getElementById('order-form');
+    orderForm.style.display = 'block';
     var customerId = e.parentNode.parentNode.childNodes[3].innerText;
     document.getElementById('customerIdToPrint').value = customerId;
   }
@@ -278,27 +452,230 @@
   }
 }
 
-function searchFunction() {
-  // Declare variables
-  var input, filter, table, tr, td, i, txtValue;
-  input = document.getElementById("searchInput");
-  filter = input.value.toUpperCase();
-  table = document.getElementById("userTable");
-  tr = table.getElementsByTagName("tr");
+// function searchFunction() {
+//   // Declare variables
+//   var input, filter, table, tr, td,td2,td3, i, txtValue;
+//   input = document.getElementById("searchInput");
+//   filter = input.value.toUpperCase();
+//   table = document.getElementById("userTable");
+//   tr = table.getElementsByTagName("tr");
 
-  // Loop through all table rows, and hide those who don't match the search query
-  for (i = 0; i < tr.length; i++) {
-    td = tr[i].getElementsByTagName("td")[2];
-    if (td) {
-      txtValue = td.textContent || td.innerText;
-      if (txtValue.toUpperCase().indexOf(filter) > -1) {
-        tr[i].style.display = "";
-      } else {
-        tr[i].style.display = "none"
-      }
+//   // Loop through all table rows, and hide those who don't match the search query
+//   for (i = 0; i < tr.length; i++) {
+//     td = tr[i].getElementsByTagName("td")[2];
+//     td2 = tr[i].getElementsByTagName("td")[3];
+//     td3 = tr[i].getElementsByTagName("td")[5];
+
+//     if (td || td2 || td3) {
+//       txtValue = td.textContent || td.innerText;
+//       if (txtValue.toUpperCase().indexOf(filter) > -1) {
+//         tr[i].style.display = "";
+//       } else {
+//         tr[i].style.display = "none"
+//       }
+//     }
+//   }
+// }
+
+function searchFunction() {
+
+// Declare variables 
+var input = document.getElementById("searchInput");
+var filter = input.value.toUpperCase();
+var table = document.getElementById("userTable");
+var trs = table.tBodies[0].getElementsByTagName("tr");
+
+// Loop through first tbody's rows
+for (var i = 0; i < trs.length; i++) {
+
+  // define the row's cells
+  var tds = trs[i].getElementsByTagName("td");
+
+  // hide the row
+  trs[i].style.display = "none";
+
+  // loop through row cells
+  for (var i2 = 0; i2 < tds.length; i2++) {
+
+    // if there's a match
+    if (tds[i2].innerHTML.toUpperCase().indexOf(filter) > -1) {
+
+      // show the row
+      trs[i].style.display = "";
+
+      // skip to the next row
+      continue;
+
     }
   }
 }
+
+}
+
+function dynamicdropdown1(listindex)
+            {
+                document.getElementById("subcategory1").length = 0;
+                switch (listindex)
+                {
+                    case "Apple" :
+                        document.getElementById("subcategory1").options[0]=new Option("Select Model","");
+                        document.getElementById("subcategory1").options[1]=new Option("iPhone 11","iphone11");
+                        document.getElementById("subcategory1").options[2]=new Option("iPhone 11 Pro","iphone11pro");
+                        document.getElementById("subcategory1").options[3]=new Option("iPhone 11 Pro Max","iphone11promax");
+                        break;
+                    
+                    case "OnePlus" :
+                        document.getElementById("subcategory1").options[0]=new Option("Select Model","");
+                        document.getElementById("subcategory1").options[1]=new Option("OnePlus 8","oneplus8");
+                        document.getElementById("subcategory1").options[2]=new Option("OnePlus 8 Pro","oneplus8pro");
+                        break;
+                    case "Samsung" :
+                        document.getElementById("subcategory1").options[0]=new Option("Select Model","");
+                        document.getElementById("subcategory1").options[1]=new Option("Galaxy S10 Lite","s10lite");
+                        document.getElementById("subcategory1").options[2]=new Option("Galaxy S20 Ultra","s20ultra");
+                        document.getElementById("subcategory1").options[3]=new Option("Galaxy Note 10 Plus","note10plus");
+                        break;
+                }
+                return true;
+            }
+            function dynamicdropdown2(listindex)
+            {
+              document.getElementById("subcategory2").length = 0;
+                switch (listindex)
+                {
+                    case "Apple" :
+                        document.getElementById("subcategory2").options[0]=new Option("Select Model",""|| null);
+                        document.getElementById("subcategory2").options[1]=new Option("iPhone 11","iphone11"|| null);
+                        document.getElementById("subcategory2").options[2]=new Option("iPhone 11 Pro","iphone11pro"|| null);
+                        document.getElementById("subcategory2").options[3]=new Option("iPhone 11 Pro Max","iphone11promax"|| null);
+                        break;
+                    
+                    case "OnePlus" :
+                        document.getElementById("subcategory2").options[0]=new Option("Select Model",""|| null);
+                        document.getElementById("subcategory2").options[1]=new Option("OnePlus 8","oneplus8"|| null);
+                        document.getElementById("subcategory2").options[2]=new Option("OnePlus 8 Pro","oneplus8pro"|| null);
+                        break;
+                    case "Samsung" :
+                        document.getElementById("subcategory2").options[0]=new Option("Select Model",""|| null);
+                        document.getElementById("subcategory2").options[1]=new Option("Galaxy S10 Lite","s10lite"|| null);
+                        document.getElementById("subcategory2").options[2]=new Option("Galaxy S20 Ultra","s20ultra"|| null);
+                        document.getElementById("subcategory2").options[3]=new Option("Galaxy Note 10 Plus","note10plus"|| null);
+                        break;
+                }
+                return true;
+            }
+
+            function dynamicdropdown3(listindex)
+            {
+              document.getElementById("subcategory3").length = 0;
+                switch (listindex)
+                {
+                    case "Apple" :
+                        document.getElementById("subcategory3").options[0]=new Option("Select Model",""|| null);
+                        document.getElementById("subcategory3").options[1]=new Option("iPhone 11","iphone11");
+                        document.getElementById("subcategory3").options[2]=new Option("iPhone 11 Pro","iphone11pro");
+                        document.getElementById("subcategory3").options[3]=new Option("iPhone 11 Pro Max","iphone11promax");
+                        break;
+                    
+                    case "OnePlus" :
+                        document.getElementById("subcategory3").options[0]=new Option("Select Model",""|| null);
+                        document.getElementById("subcategory3").options[1]=new Option("OnePlus 8","oneplus8"|| null);
+                        document.getElementById("subcategory3").options[2]=new Option("OnePlus 8 Pro","oneplus8pro"|| null);
+                        break;
+                    case "Samsung" :
+                        document.getElementById("subcategory3").options[0]=new Option("Select Model",""|| null);
+                        document.getElementById("subcategory3").options[1]=new Option("Galaxy S10 Lite","s10lite")|| null;
+                        document.getElementById("subcategory3").options[2]=new Option("Galaxy S20 Ultra","s20ultra"|| null);
+                        document.getElementById("subcategory3").options[3]=new Option("Galaxy Note 10 Plus","note10plus"|| null);
+                        break;
+                }
+                return true;
+            }
+
+            function dynamicdropdown4(listindex)
+            {
+              document.getElementById("subcategory4").length = 0;
+                switch (listindex)
+                {
+                    case "Apple" :
+                        document.getElementById("subcategory4").options[0]=new Option("Select Model",""|| null);
+                        document.getElementById("subcategory4").options[1]=new Option("iPhone 11","iphone11"|| null);
+                        document.getElementById("subcategory4").options[2]=new Option("iPhone 11 Pro","iphone11pro"|| null);
+                        document.getElementById("subcategory4").options[3]=new Option("iPhone 11 Pro Max","iphone11promax"|| null);
+                        break;
+                    
+                    case "OnePlus" :
+                        document.getElementById("subcategory4").options[0]=new Option("Select Model",""|| null);
+                        document.getElementById("subcategory4").options[1]=new Option("OnePlus 8","oneplus8"|| null);
+                        document.getElementById("subcategory4").options[2]=new Option("OnePlus 8 Pro","oneplus8pro"|| null);
+                        break;
+                    case "Samsung" :
+                        document.getElementById("subcategory4").options[0]=new Option("Select Model",""|| null);
+                        document.getElementById("subcategory4").options[1]=new Option("Galaxy S10 Lite","s10lite"|| null);
+                        document.getElementById("subcategory4").options[2]=new Option("Galaxy S20 Ultra","s20ultra"|| null);
+                        document.getElementById("subcategory4").options[3]=new Option("Galaxy Note 10 Plus","note10plus"|| null);
+                        break;
+                }
+                return true;
+            }
+
+            function dynamicdropdown5(listindex)
+            {
+              document.getElementById("subcategory5").length = 0;
+                switch (listindex)
+                {
+                    case "Apple" :
+                        document.getElementById("subcategory5").options[0]=new Option("Select Model",""|| null);
+                        document.getElementById("subcategory5").options[1]=new Option("iPhone 11","iphone11"|| null);
+                        document.getElementById("subcategory5").options[2]=new Option("iPhone 11 Pro","iphone11pro"|| null);
+                        document.getElementById("subcategory5").options[3]=new Option("iPhone 11 Pro Max","iphone11promax"|| null);
+                        break;
+                    
+                    case "OnePlus" :
+                        document.getElementById("subcategory5").options[0]=new Option("Select Model",""|| null);
+                        document.getElementById("subcategory5").options[1]=new Option("OnePlus 8","oneplus8"|| null);
+                        document.getElementById("subcategory5").options[2]=new Option("OnePlus 8 Pro","oneplus8pro"|| null);
+                        break;
+                    case "Samsung" :
+                        document.getElementById("subcategory5").options[0]=new Option("Select Model",""|| null);
+                        document.getElementById("subcategory5").options[1]=new Option("Galaxy S10 Lite","s10lite"|| null);
+                        document.getElementById("subcategory5").options[2]=new Option("Galaxy S20 Ultra","s20ultra"|| null);
+                        document.getElementById("subcategory5").options[3]=new Option("Galaxy Note 10 Plus","note10plus"|| null);
+                        break;
+                }
+                return true;
+            }
+
+$(document).ready(function(){
+  $("#addBtn1").click(function(){
+    $(".repeat1").show();
+  });
+  $("#addBtn2").click(function(){
+    $(".repeat2").show();
+  });
+  $("#addBtn3").click(function(){
+    $(".repeat3").show();
+  });
+  $("#addBtn4").click(function(){
+    $(".repeat4").show();
+  });
+  $("#rmvBtn2").click(function(){
+    $(".repeat1").hide();
+    $(".repeat1").find("input[type=number],select").val("");
+  });
+  $("#rmvBtn3").click(function(){
+    $(".repeat2").hide();
+    $(".repeat2").find("input[type=number],select").val("");
+  });
+  $("#rmvBtn4").click(function(){
+    $(".repeat3").hide();
+    $(".repeat3").find("input[type=number],select").val("");
+  });
+  $("#rmvBtn5").click(function(){
+    $(".repeat4").hide();
+    $(".repeat4").find("input[type=number],select").val("");
+  });
+});
 </script>
 </body>
 </html>

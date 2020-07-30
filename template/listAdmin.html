@@ -17,7 +17,7 @@
         }
 
         #searchInput {
-            background-image: url('/css/searchicon.png'); /* Add a search icon to input */
+            background-image: url('/css/images/searchicon.png'); /* Add a search icon to input */
             background-position: 10px 12px; /* Position the search icon */
             background-repeat: no-repeat; /* Do not repeat the icon image */
             width: 100%; /* Full-width */
@@ -26,6 +26,73 @@
             border: 1px solid #ddd; /* Add a grey border */
             margin-bottom: 12px; /* Add some space below the input */
         }
+        *  {
+	-moz-box-sizing: border-box;
+	-o-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+}
+body {
+	color: #333;
+	font-size: 1em;
+}
+a:link,
+a:visited,
+a:hover,
+a:active {
+	color: #000;
+	text-decoration: none;
+}
+.container {
+  margin: 50px auto;
+  padding: 0 50px;
+  max-width: 960px;
+}
+table { 
+	background: #FFF;
+	border-collapse: collapse;
+	width: 100%;  
+}
+td,
+th { 
+	padding: 4px; 
+	border: 2px solid #000;
+	overflow: hidden;
+	text-align: left;
+  vertical-align: middle;
+}
+th { 
+	background-color: #DDD; 
+	font-weight: 600;
+}
+th a,
+td a { 
+	display: block;
+	width: 100%;
+}
+th a.sort-by { 
+	padding-right: 18px;
+	position: relative;
+}
+a.sort-by:before,
+a.sort-by:after {
+	border: 4px solid transparent;
+	content: "";
+	display: block;
+	height: 0;
+	right: 5px;
+	top: 50%;
+	position: absolute;
+	width: 0;
+}
+a.sort-by:before {
+	border-bottom-color: #666;
+	margin-top: -9px;
+}
+a.sort-by:after {
+	border-top-color: #666;
+	margin-top: 1px;
+}
     </style>
 </head>
 <body>
@@ -53,14 +120,14 @@
         <table class="w3-table w3-centered w3-border w3-bordered w3-hoverable" id= "userTable">
             <thead>
             <tr>
-                <th onclick="sortTable(0)">Ord</th>
-                <th onclick="sortTable(1)">Id</th>
-                <th onclick="sortTable(2)">Email</th>
-                <th onclick="sortTable(3)">Address</th>
-                <th onclick="sortTable(4)">City</th>
-                <th onclick="sortTable(5)">State</th>
-                <th onclick="sortTable(6)">Shop Name</th>
-                <th onclick="sortTable(7)">Category</th>
+                <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(0)">Ord</a></th>
+                <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(1)">Id</a></th>
+                <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(2)">Email</a></th>
+                <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(3)">Address</a></th>
+                <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(4)">City</a></th>
+                <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(5)">State</a></th>
+                <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(6)">Shop Name</a></th>
+                <th scope = "col"><a href="#" class="sort-by" onclick="sortTable(7)">Category</a></th>
                 <th>Actions</th>
             </tr>
             </thead>
@@ -131,7 +198,7 @@
             <form class="w3-container" action="/updateRetailer" method="post">
                 <input type="hidden" name="Id" id="costIdToUpdate">
                 <label class="w3-label">Email</label>
-                <input class="w3-input" type="text" name="Email" placeholder="Updated Email">
+                <input class="w3-input" type="text" name="Email" id="oldEmail">
                 <label class="w3-label">Address</label>
                 <input class="w3-input" type="text" name="Address" placeholder="Updated Address">
                 <label class="w3-label">City</label>
@@ -181,6 +248,7 @@
     // get cost id to update
     var costId = e.parentNode.parentNode.childNodes[3].innerText;
     document.getElementById('costIdToUpdate').value = costId;
+    document.getElementById("oldEmail").innerHTML = this.costId;
   }
 
   function deleteCost(e) {
