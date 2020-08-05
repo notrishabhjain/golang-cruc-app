@@ -252,7 +252,7 @@ a.sort-by:after {
                     onclick="document.getElementById('order-form').style.display='none'">&times;</span>
           </div>
 
-          <form class="w3-container" action="/generatePdf" method="GET">
+          <form class="w3-container" action="/generatePdf" method="POST" enctype="multipart/form-data">
               <input type="hidden" name="Id" id="customerIdToPrint">
               <div class="w3-center">
               <div class=repeatingSection>

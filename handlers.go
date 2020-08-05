@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -304,7 +306,7 @@ func deleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 func generatePDFHandler(w http.ResponseWriter, r *http.Request) {
 	isAuthenticated(w, r)
-	if r.Method != "GET" {
+	if r.Method != "POST" {
 		http.Redirect(w, r, "/", 301)
 	}
 	var customer Customer
@@ -340,8 +342,7 @@ func generatePDFHandler(w http.ResponseWriter, r *http.Request) {
 	tA1 = a1 + int64(float64(a1)*p1.Tax)
 	fmt.Println(tA1)
 
-	switch {
-	case subcat2 != "" && q2 > 0:
+	if subcat2 != "" && q2 > 0 {
 		err = db.QueryRow("Select * from products where model=?", subcat2).Scan(&p2.Brand,
 			&p2.Model, &p2.Price, &p2.Tax)
 		if err == sql.ErrNoRows {
@@ -351,9 +352,9 @@ func generatePDFHandler(w http.ResponseWriter, r *http.Request) {
 
 		tA2 = a2 + int64(float64(a2)*p2.Tax)
 		fmt.Println(tA2)
-		fallthrough
+	}
 
-	case subcat3 != "" && q3 > 0:
+	if subcat3 != "" && q3 > 0 {
 		err = db.QueryRow("Select * from products where model=?", subcat3).Scan(&p3.Brand,
 			&p3.Model, &p3.Price, &p3.Tax)
 		if err == sql.ErrNoRows {
@@ -363,9 +364,8 @@ func generatePDFHandler(w http.ResponseWriter, r *http.Request) {
 
 		tA3 = a3 + int64(float64(a3)*p3.Tax)
 		fmt.Println(tA3)
-		fallthrough
-
-	case subcat4 != "" && q4 > 0:
+	}
+	if subcat4 != "" && q4 > 0 {
 		err = db.QueryRow("Select * from products where model=?", subcat4).Scan(&p4.Brand,
 			&p4.Model, &p4.Price, &p4.Tax)
 		if err == sql.ErrNoRows {
@@ -375,9 +375,9 @@ func generatePDFHandler(w http.ResponseWriter, r *http.Request) {
 
 		tA4 = a4 + int64(float64(a4)*p4.Tax)
 		fmt.Println(tA4)
-		fallthrough
+	}
 
-	case subcat5 != "" && q5 > 0:
+	if subcat5 != "" && q5 > 0 {
 		err = db.QueryRow("Select * from products where model=?", subcat5).Scan(&p5.Brand,
 			&p5.Model, &p5.Price, &p5.Tax)
 		if err == sql.ErrNoRows {
@@ -387,7 +387,6 @@ func generatePDFHandler(w http.ResponseWriter, r *http.Request) {
 
 		tA5 = a5 + int64(float64(a5)*p5.Tax)
 		fmt.Println(tA5)
-
 	}
 pdfgen:
 	totalAmount := tA1 + tA2 + tA3 + tA4 + tA5
@@ -468,7 +467,9 @@ pdfgen:
 	// pdf.CellFormat(190, 7, strconv.Itoa(int(customer.CusID))+" "+customer.Name+" "+customer.Email+
 	// 	" "+customer.Amount+" "+customer.Number+" "+customer.CreditDate+subcat1+strconv.Itoa(int(totalAmount)), "0", 0, "CM", false, 0, "")
 	pdf.OutputFileAndClose("./download.pdf")
-	http.ServeFile(w, r, "download.pdf")
+	uploadFile(w, r)
+	showFile(w, r)
+	// http.ServeFile(w, r, "download.pdf")
 	checkInternalServerError(err, w)
 	if err != nil {
 		panic(err)
@@ -476,6 +477,55 @@ pdfgen:
 	checkInternalServerError(err, w)
 	http.Redirect(w, r, "/list", 301)
 
+}
+
+func uploadFile(w http.ResponseWriter, r *http.Request) {
+	// Maximum upload of 10 MB files
+	// r.ParseMultipartForm(10 << 20)
+
+	// // Get handler for filename, size and headers
+	// file, handler, err := r.FormFile("download1.pdf")
+	// if err != nil {
+	// 	fmt.Println("Error Retrieving the File")
+	// 	fmt.Println(err)
+	// 	return
+	// }
+
+	r.ParseMultipartForm(32 << 20)
+	m := r.MultipartForm
+	for _, v := range m.File {
+		for _, f := range v {
+			file, err := f.Open()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			defer file.Close()
+			// fmt.Printf("Uploaded File: %+v\n", handler.Filename)
+			// fmt.Printf("File Size: %+v\n", handler.Size)
+			// fmt.Printf("MIME Header: %+v\n", handler.Header)
+
+			// Create file
+			dst, err := os.Create("download.pdf")
+			defer dst.Close()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			// Copy the uploaded file to the created file on the filesystem
+			if _, err := io.Copy(dst, file); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+	fmt.Fprintf(w, "Successfully Uploaded File\n")
+}
+
+func showFile(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "download.pdf")
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
